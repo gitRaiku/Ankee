@@ -220,9 +220,11 @@ void update() {
     }
   }
 
+  /*
   char a[100] = "";
   snprintf(a, sizeof(a), "Cws: %i; Cu: %i; Cwss: %i          ", cws, cu, cwss);
   mvwaddstr(sw, wy - textl - 11, 1, a);
+  */
   
   update_panels();
   doupdate();
@@ -710,6 +712,7 @@ void setup_server_connection() {
   unlink("/tmp/ankee.client");
   rc = bind(cs, (struct sockaddr *) &csockaddr, len);
   if (rc == -1) {
+    system("herbe \"Ankeec: Could not bind the socket!\" & disown");
     fprintf(stderr, "Could not bind the socket! [%m]\n");
     exit(1);
   }
@@ -718,6 +721,7 @@ void setup_server_connection() {
   strcpy(ssockaddr.sun_path, "/tmp/ankeed.sock");
   rc = connect(cs, (struct sockaddr *) &ssockaddr, len);
   if (rc == -1) {
+    system("herbe \"Ankeec: Could not connect the server!\" & disown");
     fprintf(stderr, "Could not connect to the server [%m]\n");
     exit(1);
   }

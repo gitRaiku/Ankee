@@ -203,19 +203,19 @@ def main():
                     send_parsed_entries(cs, pe)
                 else:
                     text = cs.recv(l).decode("utf-8").replace('\x00', '')
-                    print(f'Recv {l}: {text}');
+                    # print(f'Recv {l}: {text}');
                     tll = cs.recv(2)
                     tl = tll[0] << 8 | tll[1]
                     ot = cs.recv(tl).decode("utf-8").replace('\x00', '')
-                    print(f'And got {tl}:{ot}');
+                    # print(f'And got {tl}:{ot}');
                     dot = ot.split('\n')
                     l = int.from_bytes(cs.recv(1), byteorder='big')
                     ints = gint(l, cs.recv(l * 2))
-                    print(f'With {l}: {ints}');
+                    # print(f'With {l}: {ints}');
 
                     al = int.from_bytes(cs.recv(1), byteorder='big')
                     at = cs.recv(al).decode("utf-8").replace('\x00', '')
-                    print(f'Apath {al}: {at}')
+                    # print(f'Apath {al}: {at}')
 
                     cd = 0
                     for i in range(len(ints)):
@@ -224,9 +224,9 @@ def main():
                         cd += len(adds) - ints[i][1]
 
                     fname = at.split("/")[-1]
-                    print(text)
+                    # print(text)
                     s = f'{{\
-"action": "guiAddCards",\
+"action": "addNote",\
 "version": 6,\
 "params": {{\
 "note": {{\
@@ -259,13 +259,17 @@ def main():
 }}\
 }}\
 }}'.encode('utf-8')
-                    print(s)
-                    print(requests.post('http://localhost:8765', s))
+                    # print(s)
+                    try:
+                        requests.post('http://localhost:8765', s)
+                    except:
+                        os.system('herbe Could not connect to the AnkiConnect server!')
 
+            os.remove(at)
             cs.close()
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        print(file=os.stderr, e)
+        print(file=os.stderr, traceback.format_exc())
         pass
     server.close()
     os.remove(spath)
