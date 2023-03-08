@@ -263,13 +263,13 @@ def main():
                     try:
                         requests.post('http://localhost:8765', s)
                     except:
-                        os.system('herbe Could not connect to the AnkiConnect server!')
+                        os.system('herbe Could not connect to the AnkiConnect server! & disown')
 
             os.remove(at)
             cs.close()
     except Exception as e:
-        print(file=os.stderr, e)
-        print(file=os.stderr, traceback.format_exc())
+        print(e, file=sys.stderr)
+        print(traceback.format_exc(), file=sys.stderr)
         pass
     server.close()
     os.remove(spath)
