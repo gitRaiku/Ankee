@@ -5,6 +5,7 @@ import socket
 import os
 import traceback
 import requests
+import sys
 
 def send_parsed_entries(csock, pe):
     l = bytearray()
@@ -263,7 +264,7 @@ def main():
                     try:
                         requests.post('http://localhost:8765', s)
                     except:
-                        os.system('herbe Could not connect to the AnkiConnect server! & disown')
+                        os.system('herbe "Could not connect to the AnkiConnect server!" & disown')
 
             os.remove(at)
             cs.close()
