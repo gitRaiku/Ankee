@@ -11,6 +11,7 @@
 #include <panel.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <string.h>
 
 
 int32_t __inline__ __attribute((pure)) min(int32_t o1, int32_t o2) {
@@ -21,7 +22,7 @@ int32_t __inline__ __attribute((pure)) max(int32_t o1, int32_t o2) {
 }
 
 void help() {
-  fprintf(stderr, "./kms <display text>\n");
+  fprintf(stderr, "./kms <display text> <path/to/audio/file>\n");
   exit(1);
 }
 
@@ -64,6 +65,7 @@ struct entr {
 };
 struct entr *__restrict entrs;
 
+char *apath;
 PANEL *tp, *sp, *rp;
 WINDOW *tw, *sw, *rw;
 int32_t wx, wy;
@@ -199,8 +201,11 @@ void update() {
     } else {
       chg(cpp, 1, A_REVERSE);
     }
+    if (resps) {
+      clear_resp_win(0);
+    }
   } else {
-    if (resps && cws > 0) {
+    if (resps) {
       cws = min(max(cws, 0), respsl);
       cu = min(max(cu, 0), (cwss == 0 ? resps[cws - 1].tl : (cwss == 1 ? resps[cws - 1].rl : resps[cws - 1].ml)) - 1);
       cwss = min(max(cwss, 0), 2);
@@ -421,6 +426,7 @@ void req(wchar_t *__restrict s) {
   cus[2] = calloc(sizeof(cus[2][0]), cum[2]);
 }
 
+
 void create_new_panels() {
   int32_t i, j, k;
   werase(sw);
@@ -576,8 +582,8 @@ void send_sel() {
   ss[cl    ] = (cd - 2) >> 8;
   ss[cl + 1] = (cd - 2) & 0xFF;
   ss[cl + cd] = '\0';
-  fprintf(stdout, "Sending down to america %s\n", ss + 3);
-  fprintf(stdout, "And %s\n", ss + cl + 2);
+  //fprintf(stdout, "Sending down to america %s\n", ss + 3);
+  //fprintf(stdout, "And %s\n", ss + cl + 2);
   
   ss[cl + cd] = selemsl;
   ++cd;
@@ -586,14 +592,12 @@ void send_sel() {
     ss[cl + cd + 1] = selems[i].sl;
     cd += 2;
   }
-  uint32_t dd = cl + (ss[cl] << 8 | ss[cl + 1]);
-  fprintf(stdout, "0x%X ", ss[dd]);
-  for(i = 0; i < selemsl; ++i) {
-    fprintf(stdout, "0x%X ", ss[dd + 2 * i]);
-    fprintf(stdout, "0x%X ", ss[dd + 2 * i + 1]);
-  }
 
-  send(cs, ss, cl + cd, 0);
+  uint32_t al = 1 + strlen(apath);
+  ss[cl + cd] = al;
+  strcpy(ss + cl + cd + 1, apath);
+
+  send(cs, ss, cl + cd + al, 0);
   EXIT = 1;
 }
 
@@ -728,17 +732,22 @@ void shutdown_server_connection() {
 }
 
 int main(int argc, char **argv) {
-  /*if (argc < 2) {
+  if (argc < 3) {
     help();
-  }*/
+  }
   
   setup_server_connection();
   /*req(L"きのこ");
   shutdown_server_connection();
   return 0;*/
-  char a[] = "きのこ人間駒マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠";
-  cstr = malloc(sizeof(cstr[0]) * strlen(a));
-  utf2wch(a, cstr, &cstrl);
+  // char a[] = "きのこ人間駒マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠マメきこ海鼠";
+  // cstr = malloc(sizeof(cstr[0]) * strlen(a));
+  // utf2wch(a, cstr, &cstrl);
+
+  cstr = malloc(sizeof(cstr[0]) * strlen(argv[1]));
+  utf2wch(argv[1], cstr, &cstrl);
+
+  apath = strdup(argv[2]);
 
   setlocale(LC_ALL, "");
 

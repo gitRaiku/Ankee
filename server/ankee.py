@@ -4,6 +4,7 @@ from lxml import etree
 import socket
 import os
 import traceback
+import requests
 
 def send_parsed_entries(csock, pe):
     l = bytearray()
@@ -207,12 +208,59 @@ def main():
                     tl = tll[0] << 8 | tll[1]
                     ot = cs.recv(tl).decode("utf-8").replace('\x00', '')
                     print(f'And got {tl}:{ot}');
+                    dot = ot.split('\n')
                     l = int.from_bytes(cs.recv(1), byteorder='big')
                     ints = gint(l, cs.recv(l * 2))
                     print(f'With {l}: {ints}');
-                    coff = 0
-                    for i in ints:
-                        print(f'{text[0:i[0]]} AA {text[i[0] + i[1]:-1]}')
+
+                    al = int.from_bytes(cs.recv(1), byteorder='big')
+                    at = cs.recv(al).decode("utf-8").replace('\x00', '')
+                    print(f'Apath {al}: {at}')
+
+                    cd = 0
+                    for i in range(len(ints)):
+                        adds = f'<b>{dot[i].split("[")[0].split("/")[0]}</b>'
+                        text = f'{text[0:ints[i][0] + cd]}{adds}{text[ints[i][0] + ints[i][1] + cd:-1]}'
+                        cd += len(adds) - ints[i][1]
+
+                    fname = at.split("/")[-1]
+                    print(text)
+                    s = f'{{\
+"action": "guiAddCards",\
+"version": 6,\
+"params": {{\
+"note": {{\
+"deckName": "Sentence Mining",\
+"modelName": "SentenceMining",\
+"fields": {{\
+"Sentence": "{text}",\
+"Words": "{ot}",\
+"Audio": ""\
+}},\
+"options": {{\
+"allowDuplicate": false,\
+"duplicateScope": "deck",\
+"duplicateScopeOptions": {{\
+"deckName": "Sentence Mining",\
+"checkChildren": false,\
+"checkAllModels": false\
+}}\
+}},\
+"tags": [\
+"audio"\
+],\
+"audio": [{{\
+"filename": "{fname}",\
+"path": "{at}",\
+"fields": [\
+"Audio"\
+]\
+}}]\
+}}\
+}}\
+}}'.encode('utf-8')
+                    print(s)
+                    print(requests.post('http://localhost:8765', s))
 
             cs.close()
     except Exception as e:
