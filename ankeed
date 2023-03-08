@@ -146,7 +146,7 @@ def main():
     if os.path.exists(spath):
         os.remove(spath)
 
-    tree = etree.parse('JMdict_e.xml')
+    tree = etree.parse('/usr/share/ankee/JMdict_e.xml')
     print('Done reading!')
 
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

@@ -88,7 +88,7 @@ void del_win(WINDOW *w) {
   delwin(w);
 }
 
-void setupWindows() {
+void setup_windows() {
   erase();
   getmaxyx(curscr, wy, wx);
 
@@ -731,6 +731,13 @@ void shutdown_server_connection() {
   unlink("/tmp/r2k.client");
 }
 
+void rscr() {
+  endwin();
+  refresh();
+  clear();
+  setup_windows();
+}
+
 int main(int argc, char **argv) {
   if (argc < 3) {
     help();
@@ -758,11 +765,16 @@ int main(int argc, char **argv) {
   noecho();
   clear();
 
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(struct sigaction));
+  sa.sa_handler = rscr;
+  sigaction(SIGWINCH, &sa, NULL);
+
   getmaxyx(curscr, wy, wx);
-  setupWindows();
+  setup_windows();
   update();
 
-  char ch;
+  int ch;
   while ((ch = wgetch(sw)) != 27) {
     handle_input(ch);
     if (EXIT) {
