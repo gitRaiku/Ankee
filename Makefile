@@ -27,4 +27,4 @@ install: build
 	@echo '	to ~/.config/fish/config.fish'
 
 run: build
-	./resources/ankeec "きのこ人間" "/tmp/mata"
+	./resources/ankeec "きのこ人間泣けば" "/tmp/mata"
