@@ -18,7 +18,7 @@ install: build
 	cp resources/ankeec /usr/local/bin/ankeec
 	cp resources/sankee /usr/local/bin/sankee
 	mkdir -p /usr/share/ankee/
-	cp resources/JMdict_e.xml /usr/share/ankee
+	ln -fs $(PWD)/resources/JMdict_e.xml /usr/share/ankee/JMdict_e.xml
 	ln -fs $(PWD)/ankeed /usr/local/bin/ankeed
 	@echo '	Add'
 	@echo '		if [ "$ANKEEC" = "1" ]'

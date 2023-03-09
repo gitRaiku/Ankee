@@ -712,7 +712,10 @@ void setup_server_connection() {
   unlink("/tmp/ankee.client");
   rc = bind(cs, (struct sockaddr *) &csockaddr, len);
   if (rc == -1) {
-    system("herbe \"Ankeec: Could not bind the socket!\" & disown");
+    if (system("herbe \"Ankeec: Could not bind the socket!\" & disown")) {
+      fprintf(stderr, "Could run herbe! [%m]\n");
+      exit(1);
+    }
     fprintf(stderr, "Could not bind the socket! [%m]\n");
     exit(1);
   }
@@ -721,7 +724,10 @@ void setup_server_connection() {
   strcpy(ssockaddr.sun_path, "/tmp/ankeed.sock");
   rc = connect(cs, (struct sockaddr *) &ssockaddr, len);
   if (rc == -1) {
-    system("herbe \"Ankeec: Could not connect the server!\" & disown");
+    if (system("herbe \"Ankeec: Could not connect the server!\" & disown")) {
+      fprintf(stderr, "Could run herbe! [%m]\n");
+      exit(1);
+    }
     fprintf(stderr, "Could not connect to the server [%m]\n");
     exit(1);
   }

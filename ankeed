@@ -6,6 +6,7 @@ import os
 import traceback
 import requests
 import sys
+import re
 
 def send_parsed_entries(csock, pe):
     l = bytearray()
@@ -140,7 +141,23 @@ def gint(l, s):
     for i in range(0, l):
         r.append((s[2 * i], s[2 * i + 1]))
     return r
-        
+
+hiragana_full = r'[ぁ-ゟ]'
+katakana_full = r'[゠-ヿ]'
+kanji = r'[㐀-䶵一-鿋豈-頻]'
+radicals = r'[⺀-⿕]'
+katakana_half_width = r'[｟-ﾟ]'
+alphanum_full = r'[！-～]'
+symbols_punct = r'[、-〿]'
+misc_symbols = r'[ㇰ-ㇿ㈠-㉃㊀-㋾㌀-㍿]'
+ascii_char = r'[ -~]'
+
+def extract_unicode_block(unicode_block, string):
+    return re.findall(unicode_block, string)
+
+def has_kanji(s):
+    kj = extract_unicode_block(kanji, s)
+    return len(kj) > 0
 
 def main():
     spath = '/tmp/ankeed.sock'
@@ -172,15 +189,16 @@ def main():
                     print(f'Got {text}')
 
                     es = []
-                    for x in tree.findall(f"//entry/k_ele[keb='{text}']"): # TODO: Xpath 'or' what the fuck
-                        par = x.getparent()
-                        if par not in es:
-                            es.append(par)
-
-                    for x in tree.findall(f"//entry/r_ele[reb='{text}']"): # TODO: Xpath 'or' what the fuck
-                        par = x.getparent()
-                        if par not in es:
-                            es.append(par)
+                    if has_kanji(text):
+                        for x in tree.findall(f"//entry/k_ele[keb='{text}']"): # TODO: Xpath 'or' what the fuck
+                            par = x.getparent()
+                            if par not in es:
+                                es.append(par)
+                    else:
+                        for x in tree.findall(f"//entry/r_ele[reb='{text}']"): # TODO: Xpath 'or' what the fuck
+                            par = x.getparent()
+                            if par not in es:
+                                es.append(par)
 
                     pe = []
                     for s in es:
@@ -266,7 +284,10 @@ def main():
                     except:
                         os.system('herbe "Could not connect to the AnkiConnect server!" & disown')
 
-            os.remove(at)
+                    try:
+                        os.remove(at)
+                    except:
+                        print(f'Could not remove file {at}!', file=sys.stderr)
             cs.close()
     except Exception as e:
         print(e, file=sys.stderr)
