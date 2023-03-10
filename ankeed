@@ -215,6 +215,7 @@ r = [
         ('くな', 'く'),
         ('けば', 'く'),
         ('けなければ', 'く'),
+        ('っちまった', 'く'),
         
         ('ます', 'る'),
         ('います', 'る'),
@@ -447,8 +448,7 @@ r = [
         ('てなければ', 'つ')]
 
 def gfix(s):
-    cp = []
-    
+    cp.append(s)
     for i in r:
         check(s, i[0], i[1])
 
@@ -481,6 +481,7 @@ def main():
                     text = cs.recv(l).decode("utf-8").replace('\x00', '')
                     print(f'Got {text}')
 
+                    cp.clear()
                     gfix(text)
                     print(f'Fixed to {cp}')
 
@@ -543,8 +544,13 @@ def main():
 
                     fname = at.split("/")[-1]
                     # print(text)
+                    tp = 'guiAddCards'
+                    if r[2] == 1:
+                        tp = 'addNote'
+                    else: 
+                        tp = 'guiAddCards'
                     s = f'{{\
-"action": "addNote",\
+"action": "{tp}",\
 "version": 6,\
 "params": {{\
 "note": {{\

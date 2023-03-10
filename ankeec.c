@@ -264,6 +264,20 @@ uint32_t utf8_to_unicode(char *__restrict str, uint32_t l) {
   return res;
 }
 
+void mkwide(wchar_t *__restrict s) {
+  uint32_t i = 0;
+  while (s[i]) {
+    if (s[i] < 255) {
+      if (s[i] == ' ') {
+        s[i] = 0x3000;
+      } else {
+        s[i] += 0xFEE0;
+      }
+    }
+    ++i;
+  }
+}
+
 void utf2wch(char *__restrict s, wchar_t *__restrict t, uint32_t *__restrict tl) {
   *tl = 0;
   uint32_t cl;
@@ -561,11 +575,11 @@ uint8_t fin_sel() {
   return 1;
 }
 
-void send_sel() {
+void send_sel(uint32_t c) {
   endwin();
   char ss[1024];
   uint32_t cl = 3;
-  ss[2] = 1;
+  ss[2] = c;
 
   cl += wchutf8(ss + cl, cstr, cstrl);
   ss[0] = (cl - 3) >> 8;
@@ -684,7 +698,10 @@ void handle_input(char ch) {
         }
         break;
       case 'O':
-        send_sel();
+        send_sel(1);
+        break;
+      case 'I':
+        send_sel(2);
         break;
       case 'J':
         ++cws;
@@ -763,6 +780,7 @@ int main(int argc, char **argv) {
 
   cstr = malloc(sizeof(cstr[0]) * strlen(argv[1]));
   utf2wch(argv[1], cstr, &cstrl);
+  mkwide(cstr);
 
   apath = strdup(argv[2]);
 
