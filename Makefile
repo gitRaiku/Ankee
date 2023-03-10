@@ -21,7 +21,7 @@ install: build
 	ln -fs $(PWD)/resources/JMdict_e.xml /usr/share/ankee/JMdict_e.xml
 	ln -fs $(PWD)/ankeed /usr/local/bin/ankeed
 	@echo '	Add'
-	@echo '		if [ "$ANKEEC" = "1" ]'
+	@echo '		if [ "$$ANKEEC" = "1" ]'
 	@echo '		exec ankeec "$$(cat /tmp/ankeect)" "$$(cat /tmp/ankeecp)"'
 	@echo '		end'
 	@echo '	to ~/.config/fish/config.fish'
