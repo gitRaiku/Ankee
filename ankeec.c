@@ -81,6 +81,7 @@ uint32_t *__restrict cus[3];
 uint32_t cu;
 uint32_t cwss = 0;
 uint8_t EXIT = 0;
+uint8_t COPY = 0;
 
 void del_win(WINDOW *w) {
   wborder(w, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
@@ -152,8 +153,10 @@ uint32_t selemsl;
 
 void clear_resp_win(uint32_t cw) {
   int32_t i;
-  for(i = 0; i < resps[cw].tl; ++i) {
-    mvwchgat(entrs[cw].t.w, 1 + i, 1, resps[cw].t[i].l * 2, A_NORMAL, 0, NULL);
+  if (resps[cw].tl) {
+    for(i = 0; i < resps[cw].tl; ++i) {
+      mvwchgat(entrs[cw].t.w, 1 + i, 1, resps[cw].t[i].l * 2, A_NORMAL, 0, NULL);
+    }
   }
   for(i = 0; i < resps[cw].rl; ++i) {
     mvwchgat(entrs[cw].r.w, 1 + i, 1, resps[cw].r[i].l * 2, A_NORMAL, 0, NULL);
@@ -167,9 +170,11 @@ void sel_resp_win(uint32_t cw) {
   clear_resp_win(cw);
 
   int32_t i;
-  for(i = 0; i < resps[cw].tl; ++i) {
-    if (cus[0][i] || cwss == 0) {
-      mvwchgat(entrs[cw].t.w, 1 + i, 1, resps[cw].t[i].l   * 2, (cus[0][i] * A_REVERSE) | ((cwss == 0 && cu == i) * (A_BOLD | A_UNDERLINE)), 0, NULL);
+  if (resps[cw].tl) {
+    for(i = 0; i < resps[cw].tl; ++i) {
+      if (cus[0][i] || cwss == 0) {
+        mvwchgat(entrs[cw].t.w, 1 + i, 1, resps[cw].t[i].l   * 2, (cus[0][i] * A_REVERSE) | ((cwss == 0 && cu == i) * (A_BOLD | A_UNDERLINE)), 0, NULL);
+      }
     }
   }
   
@@ -207,8 +212,8 @@ void update() {
   } else {
     if (resps) {
       cws = min(max(cws, 0), respsl);
-      cu = min(max(cu, 0), (cwss == 0 ? resps[cws - 1].tl : (cwss == 1 ? resps[cws - 1].rl : resps[cws - 1].ml)) - 1);
-      cwss = min(max(cwss, 0), 2);
+      cu = min(max(cu, 0), (cwss == 0 ? (resps[cws - 1].tl ? resps[cws - 1].tl : 99) : (cwss == 1 ? resps[cws - 1].rl : resps[cws - 1].ml)) - 1);
+      cwss = min(max(cwss, resps[cws - 1].tl ? 0 : 1), 2);
       if (cws > 1) {
         clear_resp_win(cws - 2);
       }
@@ -264,18 +269,39 @@ uint32_t utf8_to_unicode(char *__restrict str, uint32_t l) {
   return res;
 }
 
-void mkwide(wchar_t *__restrict s) {
-  uint32_t i = 0;
-  while (s[i]) {
-    if (s[i] < 255) {
-      if (s[i] == ' ') {
-        s[i] = 0x3000;
-      } else {
-        s[i] += 0xFEE0;
-      }
-    }
-    ++i;
+uint8_t iswide(wchar_t c) { // TODO: FIX
+  if (c == L'…') {
+    return 0;
   }
+  return 1;
+}
+
+uint32_t mkwide(wchar_t *__restrict s, wchar_t c) {
+  if (c < 255) {
+    if (c == ' ') {
+      c = 0x3000;
+    } else {
+      c += 0xFEE0;
+    }
+  }
+  s[0] = c;
+  if (!iswide(c)) {
+    s[1] = L' ';
+    return 2;
+  }
+  return 1;
+}
+
+void utf2wwch(char *__restrict s, wchar_t *__restrict t, uint32_t *__restrict tl) {
+  *tl = 0;
+  uint32_t cl;
+  while (*s) {
+    cl = runel(s);
+    *tl += mkwide(t + *tl, utf8_to_unicode(s, cl));
+    s += cl;
+  }
+  t[*tl] = L'\0';
+  t = realloc(t, *tl * sizeof(t[0]));
 }
 
 void utf2wch(char *__restrict s, wchar_t *__restrict t, uint32_t *__restrict tl) {
@@ -453,18 +479,21 @@ void create_new_panels() {
   uint32_t tmw, ch, h;
   entrs = malloc(respsl * sizeof(entrs[0]));
   ch = 0;
+  tmw = 0;
   for(k = 0; k < respsl; ++k) {
     h = max(resps[k].tl, max(resps[k].rl, resps[k].ml));
-    tmw = 0;
-    for(i = 0; i < resps[k].tl; ++i) {
-      tmw = max(tmw, resps[k].t[i].l * 2 + 2);
+    if (resps[k].tl) {
+      tmw = 0;
+      for(i = 0; i < resps[k].tl; ++i) {
+        tmw = max(tmw, resps[k].t[i].l * 2 + 2);
+      }
+      entrs[k].t.w = derwin(sw, h + 2, tmw, 1 + ch, 1);
+      for(i = 0; i < resps[k].tl; ++i) {
+        mvwaddwstr(entrs[k].t.w, 1 + i, 1, resps[k].t[i].s);
+      }
+      box(entrs[k].t.w, 0, 0);
+      entrs[k].t.p = new_panel(entrs[k].t.w);
     }
-    entrs[k].t.w = derwin(sw, h + 2, tmw, 1 + ch, 1);
-    for(i = 0; i < resps[k].tl; ++i) {
-      mvwaddwstr(entrs[k].t.w, 1 + i, 1, resps[k].t[i].s);
-    }
-    box(entrs[k].t.w, 0, 0);
-    entrs[k].t.p = new_panel(entrs[k].t.w);
 
     uint32_t rmw = 0;
     for(i = 0; i < resps[k].rl; ++i) {
@@ -511,9 +540,11 @@ uint8_t fin_sel() {
   uint8_t f = 0;
   uint32_t cl = 0;
 
-  for(i = 0; i < resps[cws - 1].tl; ++i) { if (cus[0][i]) { f = 1; break; } }
-  if (f == 0) { return 0; }
-  f = 0;
+  if (resps[cws - 1].tl) {
+    for(i = 0; i < resps[cws - 1].tl; ++i) { if (cus[0][i]) { f = 1; break; } }
+    if (f == 0) { return 0; }
+    f = 0;
+  }
   for(i = 0; i < resps[cws - 1].rl; ++i) { if (cus[1][i]) { f = 1; break; } }
   if (f == 0) { return 0; }
   f = 0;
@@ -521,19 +552,21 @@ uint8_t fin_sel() {
   if (f == 0) { return 0; }
   f = 0;
   selems[selemsl].s.s = calloc(1, sizeof(selems[selemsl].s.s[0]) * 1024);
-  for(i = 0; i < resps[cws - 1].tl; ++i) {
-    if (cus[0][i]) {
-      if (f != 0) {
-        swprintf(selems[selemsl].s.s + cl, 2, L"/");
-        ++cl;
+  if (resps[cws - 1].tl) {
+    for(i = 0; i < resps[cws - 1].tl; ++i) {
+      if (cus[0][i]) {
+        if (f != 0) {
+          swprintf(selems[selemsl].s.s + cl, 2, L"/");
+          ++cl;
+        }
+        swprintf(selems[selemsl].s.s + cl, resps[cws - 1].t[i].l + 1, L"%ls", resps[cws - 1].t[i].s);
+        cl += resps[cws - 1].t[i].l;
+        f = 1;
       }
-      swprintf(selems[selemsl].s.s + cl, resps[cws - 1].t[i].l + 1, L"%ls", resps[cws - 1].t[i].s);
-      cl += resps[cws - 1].t[i].l;
-      f = 1;
     }
+    swprintf(selems[selemsl].s.s + cl, 2, L"[");
+    ++cl;
   }
-  swprintf(selems[selemsl].s.s + cl, 2, L"[");
-  ++cl;
   f = 0;
   for(i = 0; i < resps[cws - 1].rl; ++i) {
     if (cus[1][i]) {
@@ -546,8 +579,13 @@ uint8_t fin_sel() {
       f = 1;
     }
   }
-  swprintf(selems[selemsl].s.s + cl, 4, L"]: ");
-  cl += 3;
+  if (resps[cws - 1].tl) {
+    swprintf(selems[selemsl].s.s + cl, 4, L"]: ");
+    cl += 3;
+  } else {
+    swprintf(selems[selemsl].s.s + cl, 4, L": ");
+    cl += 2;
+  }
   f = 0;
   for(i = 0; i < resps[cws - 1].ml; ++i) {
     if (cus[2][i]) {
@@ -697,6 +735,10 @@ void handle_input(char ch) {
           }
         }
         break;
+      case 'y':
+        EXIT = 1;
+        COPY = 1;
+        break;
       case 'O':
         send_sel(1);
         break;
@@ -759,10 +801,12 @@ void shutdown_server_connection() {
 }
 
 void rscr() {
-  endwin();
-  refresh();
-  clear();
-  setup_windows();
+  if (!respsl) {
+    endwin();
+    refresh();
+    clear();
+    setup_windows();
+  }
 }
 
 int main(int argc, char **argv) {
@@ -779,8 +823,7 @@ int main(int argc, char **argv) {
   // utf2wch(a, cstr, &cstrl);
 
   cstr = malloc(sizeof(cstr[0]) * strlen(argv[1]));
-  utf2wch(argv[1], cstr, &cstrl);
-  mkwide(cstr);
+  utf2wwch(argv[1], cstr, &cstrl);
 
   apath = strdup(argv[2]);
 
@@ -813,6 +856,13 @@ int main(int argc, char **argv) {
     doupdate();
   }
   endwin();
+  if (COPY) {
+    char a[1024] = "";
+    sprintf(a, "echo \"%s\" | xclip -selection clipboard -t text/plain", argv[1]);
+    if (system(a)) {
+      fprintf(stderr, "Could not copy the text to the clipboard!\n");
+    }
+  }
 
   clear_resp();
   shutdown_server_connection();

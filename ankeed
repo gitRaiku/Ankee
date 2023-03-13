@@ -133,6 +133,12 @@ def fix(a):
                 r.append("Verb")
             case "Godan verb with 'ru' ending":
                 r.append("Godan verb with ru ending")
+            case "Ichidan verb":
+                r.append("Verb")
+            case "intransitive verb":
+                pass
+            case "transitive verb":
+                pass
 
 
             case _:
@@ -179,6 +185,7 @@ def has_kanji(s):
     return len(kj) > 0
 
 cp = []
+swapped = []
 def check(s, t, x):
     sl = len(s)
     tl = len(t)
@@ -186,6 +193,7 @@ def check(s, t, x):
         if s[sl - tl:sl] == t:
             print(f'{s} - {t} -> {s[0:sl-tl] + x}')
             cp.append(s[0:sl-tl] + x)
+            swapped.append((s[0:sl-tl] + x, s))
 
 r = [
         ('きます', 'く'),
@@ -225,6 +233,7 @@ r = [
         ('いました', 'る'),
         ('いなかった', 'る'),
         ('いませんでした', 'る'),
+        ('て', 'る'),
         ('いて', 'る'),
         ('いなくて', 'る'),
         ('いよう', 'る'),
@@ -452,6 +461,14 @@ def gfix(s):
     for i in r:
         check(s, i[0], i[1])
 
+def swa(s):
+    for i in swapped:
+        if i[0] == s:
+            print(f'Swapped {s} back for {i[1]}')
+            return i[1]
+    print(f'Let {s} be the same')
+    return s
+
 def main():
     spath = '/tmp/ankeed.sock'
     if os.path.exists(spath):
@@ -482,6 +499,7 @@ def main():
                     print(f'Got {text}')
 
                     cp.clear()
+                    swapped.clear()
                     gfix(text)
                     print(f'Fixed to {cp}')
 
@@ -538,7 +556,8 @@ def main():
 
                     cd = 0
                     for i in range(len(ints)):
-                        adds = f'<b>{dot[i].split("[")[0].split("/")[0]}</b>'
+                        ct = dot[i].split(':')[0].split('[')[0].split('/')[0]
+                        adds = f'<b>{swa(ct)}</b>'
                         text = f'{text[0:ints[i][0] + cd]}{adds}{text[ints[i][0] + ints[i][1] + cd:-1]}'
                         cd += len(adds) - ints[i][1]
 
@@ -549,6 +568,9 @@ def main():
                         tp = 'addNote'
                     else: 
                         tp = 'guiAddCards'
+
+                    ot = ot.replace('\n', '\\n')
+
                     s = f'{{\
 "action": "{tp}",\
 "version": 6,\
@@ -583,7 +605,7 @@ def main():
 }}\
 }}\
 }}'.encode('utf-8')
-                    # print(s)
+                    print(s)
                     try:
                         requests.post('http://localhost:8765', s)
                     except:
