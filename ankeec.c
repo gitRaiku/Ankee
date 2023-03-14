@@ -89,37 +89,6 @@ void del_win(WINDOW *w) {
   delwin(w);
 }
 
-void setup_windows() {
-  erase();
-  getmaxyx(curscr, wy, wx);
-
-  textl = (cstrl * 2) / (wx - 4);
-  tw = newwin(textl + 3, wx - 2, 0, 1);
-  box(tw, 0, 0);
-  
-  {
-    uint32_t coff = 0;
-    uint32_t yoff = 0;
-    while (coff < cstrl) {
-      mvwaddnwstr(tw, 1 + yoff, 1, cstr + coff, min((wx - 4) / 2, cstrl - coff));
-      coff += (wx - 4) / 2;
-      ++yoff;
-    }
-  }
-  tp = new_panel(tw);
-
-  sw = newwin(wy - textl - 3 - 6, wx - 2, textl + 3, 1);
-  box(sw, 0, 0);
-  sp = new_panel(sw);
-
-  rw = newwin(6, wx - 2, textl + 3 + wy - textl - 3 - 6, 1);
-  box(rw, 0, 0);
-  rp = new_panel(rw);
-
-  update_panels();
-  doupdate();
-}
-
 void chg(int cp, int cl, int mod) {
   uint32_t cy = cp / ((wx - 4) / 2);
   uint32_t cx = cp - (cy * ((wx - 4) / 2));
@@ -227,7 +196,7 @@ void update() {
 
   /*
   char a[100] = "";
-  snprintf(a, sizeof(a), "Cws: %i; Cu: %i; Cwss: %i          ", cws, cu, cwss);
+  snprintf(a, sizeof(a), "Sel: %u Sell: %u Cpp: %u; Strl: %u;          ", sel, sell, cpp, cstrl);
   mvwaddstr(sw, wy - textl - 11, 1, a);
   */
   
@@ -468,7 +437,6 @@ void req(wchar_t *__restrict s) {
   cus[2] = calloc(sizeof(cus[2][0]), cum[2]);
 }
 
-
 void create_new_panels() {
   int32_t i, j, k;
   werase(sw);
@@ -533,6 +501,50 @@ void create_new_panels() {
     entrs[k].m.p = new_panel(entrs[k].m.w);
     ch += h + 2;
   }
+}
+
+void setup_windows() {
+  erase();
+  if (tw) {
+    werase(tw);
+  }
+  if (sw) {
+    werase(sw);
+  }
+  if (rw) {
+    werase(rw);
+  }
+  getmaxyx(curscr, wy, wx);
+
+  textl = (cstrl * 2) / (wx - 4);
+  tw = newwin(textl + 3, wx - 2, 0, 1);
+  box(tw, 0, 0);
+  
+  {
+    uint32_t coff = 0;
+    uint32_t yoff = 0;
+    while (coff < cstrl) {
+      mvwaddnwstr(tw, 1 + yoff, 1, cstr + coff, min((wx - 4) / 2, cstrl - coff));
+      coff += (wx - 4) / 2;
+      ++yoff;
+    }
+  }
+  tp = new_panel(tw);
+
+  sw = newwin(wy - textl - 3 - 6, wx - 2, textl + 3, 1);
+  box(sw, 0, 0);
+  sp = new_panel(sw);
+
+  rw = newwin(6, wx - 2, textl + 3 + wy - textl - 3 - 6, 1);
+  box(rw, 0, 0);
+  rp = new_panel(rw);
+
+  if (respsl) {
+    create_new_panels();
+  }
+
+  update_panels();
+  doupdate();
 }
 
 uint8_t fin_sel() {
@@ -705,6 +717,22 @@ void handle_input(char ch) {
         sel ^= 1;
         sell = sel;
         break;
+      case 'd':
+        if (sel) {
+          {
+            int32_t i;
+            for(i = 0; i <= sell; ++i) {
+              if (cstr[cpp + i] == ' ') {
+                ++sell;
+              }
+            }
+          }
+          memmove(cstr + cpp, cstr + cpp + sell, sizeof(cstr[0]) * (cstrl - cpp - sell));
+          cstrl -= sell;
+          setup_windows();
+          sel = 0;
+        }
+        break;
       case ' ':
         if (cws == 0) {
           if (sel) {
@@ -714,7 +742,7 @@ void handle_input(char ch) {
             a[sell] = L'\0';
             selems[selemsl].sp = cpp;
             selems[selemsl].sl = sell;
-            req(a);
+            req(a);   
             create_new_panels();
             sel = 0;
           }
@@ -801,12 +829,10 @@ void shutdown_server_connection() {
 }
 
 void rscr() {
-  if (!respsl) {
-    endwin();
-    refresh();
-    clear();
-    setup_windows();
-  }
+  endwin();
+  refresh();
+  clear();
+  setup_windows();
 }
 
 int main(int argc, char **argv) {
@@ -858,7 +884,7 @@ int main(int argc, char **argv) {
   endwin();
   if (COPY) {
     char a[1024] = "";
-    sprintf(a, "echo \"%s\" | xclip -selection clipboard -t text/plain", argv[1]);
+    sprintf(a, "echo \"%s\" | xclip -selection clipboard", argv[1]);
     if (system(a)) {
       fprintf(stderr, "Could not copy the text to the clipboard!\n");
     }

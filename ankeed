@@ -164,7 +164,7 @@ def fix(a):
 def gint(l, s):
     r = []
     for i in range(0, l):
-        r.append((s[2 * i], s[2 * i + 1]))
+        r.append((s[2 * i], s[2 * i + 1], i))
     return r
 
 hiragana_full = r'[ぁ-ゟ]'
@@ -555,8 +555,9 @@ def main():
                     # print(f'Apath {al}: {at}')
 
                     cd = 0
+                    ints = sorted(ints)
                     for i in range(len(ints)):
-                        ct = dot[i].split(':')[0].split('[')[0].split('/')[0]
+                        ct = dot[ints[i][2]].split(':')[0].split('[')[0].split('/')[0]
                         adds = f'<b>{swa(ct)}</b>'
                         text = f'{text[0:ints[i][0] + cd]}{adds}{text[ints[i][0] + ints[i][1] + cd:-1]}'
                         cd += len(adds) - ints[i][1]
@@ -569,7 +570,7 @@ def main():
                     else: 
                         tp = 'guiAddCards'
 
-                    ot = ot.replace('\n', '\\n')
+                    ot = ot.replace('\n', '<br>')
 
                     s = f'{{\
 "action": "{tp}",\
