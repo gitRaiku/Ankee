@@ -713,6 +713,9 @@ void handle_input(char ch) {
           --cu;
         }
         break;
+      case 27:
+        sel = 0;
+        break;
       case 'v':
         sel ^= 1;
         sell = sel;
@@ -872,7 +875,7 @@ int main(int argc, char **argv) {
   update();
 
   int ch;
-  while ((ch = wgetch(sw)) != 27) {
+  while ((ch = wgetch(sw)) != 'q') {
     handle_input(ch);
     if (EXIT) {
       break;
