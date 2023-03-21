@@ -1,5 +1,6 @@
 #!/bin/python
 
+from multiprocessing import Pool
 from lxml import etree
 import socket
 import os
@@ -45,7 +46,6 @@ def send_parsed_entries(csock, pe):
                     l.append(x)
 
     csock.send(l)
-
 
 def fix(a):
     nn = 0
@@ -470,11 +470,26 @@ def swa(s):
     print(f'Let {s} be the same')
     return s
 
+tree = None
+def fnd(t):
+    print(f'Start search for {t}')
+    r = []
+    if has_kanji(t):
+        for x in tree.findall(f"//entry/k_ele[keb='{t}']"):
+            print(f'Finished search for {t}')
+            r.append(etree.tostring(x.getparent(), pretty_print=False))
+    else:
+        for x in tree.findall(f"//entry/r_ele[reb='{t}']"):
+            print(f'Finished search for {t}')
+            r.append(etree.tostring(x.getparent(), pretty_print=False))
+    return r
+
 def main():
     spath = '/tmp/ankeed.sock'
     if os.path.exists(spath):
         os.remove(spath)
 
+    global tree
     tree = etree.parse('/usr/share/ankee/JMdict_e.xml')
     print('Done reading!')
 
@@ -505,17 +520,19 @@ def main():
                     print(f'Fixed to {cp}')
 
                     es = []
-                    for t in cp:
-                        if has_kanji(t):
-                            for x in tree.findall(f"//entry/k_ele[keb='{t}']"): # TODO: Xpath 'or' what the fuck
-                                par = x.getparent()
-                                if par not in es:
-                                    es.append(par)
-                        else:
-                            for x in tree.findall(f"//entry/r_ele[reb='{t}']"): # TODO: Xpath 'or' what the fuck
-                                par = x.getparent()
-                                if par not in es:
-                                    es.append(par)
+                    try:
+                        pool = Pool(len(cp))
+                        r = pool.map(fnd, cp)
+                        pool.close()
+                        pool.join()
+                        for t in r:
+                            for tt in t:
+                                if tt not in es:
+                                    es.append(etree.fromstring(tt))
+                    except Exception as e:
+                        print(e, file=sys.stderr)
+                        print(traceback.format_exc(), file=sys.stderr)
+
 
                     print(f'Got {es}')
                     pe = []
@@ -621,7 +638,6 @@ def main():
     except Exception as e:
         print(e, file=sys.stderr)
         print(traceback.format_exc(), file=sys.stderr)
-        pass
     server.close()
     os.remove(spath)
 
