@@ -26,7 +26,8 @@ install: build
 	@echo '		end'
 	@echo '	to ~/.config/fish/config.fish'
 
-STRING = "ab cd()\ のこ人間泣けばゼミ…/き"
+STRING = "ab cd()\ のこ“人間“泣けばゼミ…/き"
+# STRING = "ab cd()\ のこ人間泣けばゼミ/き"
 run: build
 	./resources/ankeec $(STRING) "/tmp/mata"
 

@@ -17,6 +17,7 @@
 int32_t __inline__ __attribute((pure)) min(int32_t o1, int32_t o2) {
   return o1 < o2 ? o1 : o2;
 }
+
 int32_t __inline__ __attribute((pure)) max(int32_t o1, int32_t o2) {
   return o1 > o2 ? o1 : o2;
 }
@@ -58,6 +59,7 @@ struct wp {
   WINDOW *w;
   PANEL *p;
 };
+
 struct entr {
   struct wp t;
   struct wp r;
@@ -82,6 +84,7 @@ uint32_t cu;
 uint32_t cwss = 0;
 uint8_t EXIT = 0;
 uint8_t COPY = 0;
+uint32_t tsp = 0;
 
 void del_win(WINDOW *w) {
   wborder(w, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
@@ -116,7 +119,6 @@ struct selem {
   uint32_t sp;
   uint32_t sl;
 };
-
 struct selem *__restrict selems;
 uint32_t selemsl;
 
@@ -165,8 +167,8 @@ void update() {
 
   if (cws == 0) {
     cpp = min(max(cpp, 0), cstrl - 1);
-    if (sell + cpp > cstrl) {
-      sell = cstrl - cpp;
+    if (sell + cpp > cstrl - tsp) {
+      sell = cstrl - cpp - tsp;
     }
     sell = max(sell, 1);
       
@@ -196,9 +198,8 @@ void update() {
 
   /*
   char a[100] = "";
-  snprintf(a, sizeof(a), "Sel: %u Sell: %u Cpp: %u; Strl: %u;          ", sel, sell, cpp, cstrl);
-  mvwaddstr(sw, wy - textl - 11, 1, a);
-  */
+  snprintf(a, sizeof(a), "tsp: %u          ", tsp);
+  mvwaddstr(sw, wy - textl - 11, 1, a);*/
   
   update_panels();
   doupdate();
@@ -239,7 +240,7 @@ uint32_t utf8_to_unicode(char *__restrict str, uint32_t l) {
 }
 
 uint8_t iswide(wchar_t c) { // TODO: FIX
-  if (c == L'…') {
+  if (c == L'…' || c == L'”' || c == L'“') {
     return 0;
   }
   return 1;
@@ -255,6 +256,7 @@ uint32_t mkwide(wchar_t *__restrict s, wchar_t c) {
   }
   s[0] = c;
   if (!iswide(c)) {
+    ++tsp;
     s[1] = L' ';
     return 2;
   }
@@ -631,10 +633,17 @@ void send_sel(uint32_t c) {
   uint32_t cl = 3;
   ss[2] = c;
 
-  cl += wchutf8(ss + cl, cstr, cstrl);
+  {
+    int32_t i;
+    uint32_t dr = 0;
+    for(i = 0; i < cstrl + dr; ++i) {
+      if (cstr[i] != L' ') {
+        cl += wchutf8(ss + cl, cstr + i, 1);
+      }
+    }
+  }
   ss[0] = (cl - 3) >> 8;
   ss[1] = (cl - 3) & 0xFF;
-
 
   int32_t i;
   uint32_t cd = 2;
@@ -741,10 +750,26 @@ void handle_input(char ch) {
           if (sel) {
             selems = realloc(selems, sizeof(selems[0]) * (selemsl + 1));
             wchar_t a[512];
-            wcsncpy(a, cstr + cpp, sell);
-            a[sell] = L'\0';
-            selems[selemsl].sp = cpp;
-            selems[selemsl].sl = sell;
+            {
+              int32_t i;
+              uint32_t st = 0;
+              uint32_t dr = 0;
+              for(i = 0; i <= cpp + st; ++i) {
+                if (cstr[i] == ' ') {
+                  ++st;
+                }
+              }
+              wcsncpy(a, cstr + cpp + st, sell + dr);
+              for(i = 0; i < sell + dr; ++i) {
+                if (cstr[cpp + st + i] == ' ') {
+                  wcsncpy(a + i - dr, cstr + cpp + st + i + 1, sell + dr - i);
+                  ++dr;
+                }
+              }
+              a[sell] = L'\0';
+              selems[selemsl].sp = cpp;
+              selems[selemsl].sl = sell;
+            }
             req(a);   
             create_new_panels();
             sel = 0;
@@ -880,7 +905,7 @@ int main(int argc, char **argv) {
     if (EXIT) {
       break;
     }
-    cpp = min(max(cpp, 0), cstrl);
+    cpp = min(max(cpp, 0), cstrl - tsp - 1);
     update();
     doupdate();
   }

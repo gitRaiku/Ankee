@@ -558,30 +558,30 @@ def main():
                     send_parsed_entries(cs, pe)
                 else:
                     text = cs.recv(l).decode("utf-8").replace('\x00', '')
-                    # print(f'Recv {l}: {text}');
+                    print(f'Recv {l}: {text}');
                     tll = cs.recv(2)
                     tl = tll[0] << 8 | tll[1]
                     ot = cs.recv(tl).decode("utf-8").replace('\x00', '')
-                    # print(f'And got {tl}:{ot}');
+                    print(f'And got {tl}:{ot}');
                     dot = ot.split('\n')
                     l = int.from_bytes(cs.recv(1), byteorder='big')
                     ints = gint(l, cs.recv(l * 2))
-                    # print(f'With {l}: {ints}');
+                    print(f'With {l}: {ints}');
 
                     al = int.from_bytes(cs.recv(1), byteorder='big')
                     at = cs.recv(al).decode("utf-8").replace('\x00', '')
-                    # print(f'Apath {al}: {at}')
+                    print(f'Apath {al}: {at}')
 
                     cd = 0
                     ints = sorted(ints)
                     for i in range(len(ints)):
                         ct = dot[ints[i][2]].split(':')[0].split('[')[0].split('/')[0]
                         adds = f'<b>{swa(ct)}</b>'
-                        text = f'{text[0:ints[i][0] + cd]}{adds}{text[ints[i][0] + ints[i][1] + cd:-1]}'
+                        text = f'{text[0:ints[i][0] + cd]}{adds}{text[ints[i][0] + ints[i][1] + cd:len(text)]}'
                         cd += len(adds) - ints[i][1]
 
                     fname = at.split("/")[-1]
-                    # print(text)
+                    print(text)
                     tp = 'guiAddCards'
                     if r[2] == 1:
                         tp = 'addNote'
