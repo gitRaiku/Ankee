@@ -243,6 +243,9 @@ uint8_t iswide(wchar_t c) { // TODO: FIX
   if (c == L'…' || c == L'”' || c == L'“') {
     return 0;
   }
+  if (c < 3000) {
+    return 0;
+  }
   return 1;
 }
 
@@ -399,7 +402,7 @@ void req(wchar_t *__restrict s) {
     return;
   }
   resps = malloc(respsl * sizeof(resps[0]));
-  int32_t i, j, k;
+  int32_t i, j, k, ii;
   uint32_t cum[3] = {0};
   for(i = 0; i < respsl; ++i) {
     R(resps[i].t);
@@ -419,6 +422,11 @@ void req(wchar_t *__restrict s) {
       for(k = 0; k < resps[i].m[j].tl; ++k) {
         S(resps[i].m[j].t[k]);
         resps[i].m[j].tls += resps[i].m[j].t[k].l;
+        for(ii = 0; ii < resps[i].m[j].t[k].l; ++ii) {
+          if (iswide(resps[i].m[j].t[k].s[ii])) {
+            ++resps[i].m[j].tls;
+          }
+        }
       }
       resps[i].m[j].tls += (resps[i].m[j].tl - 1) * 2;
 
@@ -427,6 +435,11 @@ void req(wchar_t *__restrict s) {
       for(k = 0; k < resps[i].m[j].pl; ++k) {
         S(resps[i].m[j].p[k]);
         resps[i].m[j].pls += resps[i].m[j].p[k].l;
+        for(ii = 0; ii < resps[i].m[j].p[k].l; ++ii) {
+          if (iswide(resps[i].m[j].p[k].s[ii])) {
+            ++resps[i].m[j].pls;
+          }
+        }
       }
       resps[i].m[j].pls += (resps[i].m[j].pl - 1) * 2;
     }
@@ -733,13 +746,19 @@ void handle_input(char ch) {
         if (sel) {
           {
             int32_t i;
+            uint32_t st = 0;
+            for(i = 0; i <= cpp + st; ++i) {
+              if (cstr[i] == ' ') {
+                ++st;
+              }
+            }
             for(i = 0; i <= sell; ++i) {
-              if (cstr[cpp + i] == ' ') {
+              if (cstr[cpp + st + i] == ' ') {
                 ++sell;
               }
             }
+            memmove(cstr + cpp + st, cstr + cpp + st + sell, sizeof(cstr[0]) * (cstrl - cpp - st - sell));
           }
-          memmove(cstr + cpp, cstr + cpp + sell, sizeof(cstr[0]) * (cstrl - cpp - sell));
           cstrl -= sell;
           setup_windows();
           sel = 0;
