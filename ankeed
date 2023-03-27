@@ -472,6 +472,7 @@ def gfix(s):
         check(s, i[0], i[1])
 
 def swa(s):
+    print(f'Trying {s} in swapped {swapped}')
     for i in swapped:
         if i[0] == s:
             print(f'Swapped {s} back for {i[1]}')
@@ -486,11 +487,11 @@ def fnd(t):
     if has_kanji(t):
         for x in tree.findall(f"//entry/k_ele[keb='{t}']"):
             print(f'Finished search for {t}')
-            r.append(etree.tostring(x.getparent(), pretty_print=False))
+            r.append({'t': t, 'r': etree.tostring(x.getparent(), pretty_print=False)})
     else:
         for x in tree.findall(f"//entry/r_ele[reb='{t}']"):
             print(f'Finished search for {t}')
-            r.append(etree.tostring(x.getparent(), pretty_print=False))
+            r.append({'t': t, 'r': etree.tostring(x.getparent(), pretty_print=False)})
     return r
 
 def main():
@@ -537,7 +538,7 @@ def main():
                         for t in r:
                             for tt in t:
                                 if tt not in es:
-                                    es.append(etree.fromstring(tt))
+                                    es.append({'t': tt['t'], 'r': etree.fromstring(tt['r'])})
                     except Exception as e:
                         print(e, file=sys.stderr)
                         print(traceback.format_exc(), file=sys.stderr)
@@ -549,11 +550,11 @@ def main():
                         st = ''
                         entry = {'t': [], 'r': [], 'm': []}
                         # print(etree.tostring(s, pretty_print=False).decode('utf-8'))
-                        for x in s.findall('.//k_ele/keb'):
+                        for x in s['r'].findall('.//k_ele/keb'):
                             entry['t'].append(x.text)
-                        for x in s.findall('.//r_ele/reb'):
+                        for x in s['r'].findall('.//r_ele/reb'):
                             entry['r'].append(x.text)
-                        for x in s.findall('.//sense'):
+                        for x in s['r'].findall('.//sense'):
                             meaning = {'t': [], 'p': []}
                             for y in x.findall('.//pos'):
                                 meaning['p'].append(y.text)
