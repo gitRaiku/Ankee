@@ -1,4 +1,4 @@
 #!/bin/sh
 
 export ANKEEC=1
-st fish
+foot fish
