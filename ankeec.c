@@ -962,9 +962,10 @@ int main(int argc, char **argv) {
         b[i] = unwide(b[i]);
       }
       b[sell] = L'\0';
-      sprintf(a, "echo \"%ls\" | xclip -loops 0 -selection clipboard", b);
+
+      sprintf(a, "echo \"%ls\" | nohup xclip -t text/plain -loops 0 -selection clipboard > /dev/null 2>&", b);
     } else {
-      sprintf(a, "echo \"%s\" | xclip -loops 0 -selection clipboard", argv[1]);
+      sprintf(a, "echo \"%s\" | nohup xclip -t text/plain -loops 0 -selection clipboard > /dev/null 2>&1", argv[1]);
     }
     if (system(a)) {
       fprintf(stderr, "Could not copy the text to the clipboard!\n");
