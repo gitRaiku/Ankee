@@ -240,7 +240,7 @@ uint32_t utf8_to_unicode(char *__restrict str, uint32_t l) {
 }
 
 uint8_t iswide(wchar_t c) { // TODO: FIX
-  if (c == L'…' || c == L'”' || c == L'“') {
+  if (c == L'…' || c == L'”' || c == L'“' || c == L'･') {
     return 0;
   }
   if (c < 3000) {
@@ -962,9 +962,10 @@ int main(int argc, char **argv) {
         b[i] = unwide(b[i]);
       }
       b[sell] = L'\0';
-
+      sprintf(a, "echo \"%ls\" | wl-copy -t", b);
       sprintf(a, "echo \"%ls\" | nohup xclip -t text/plain -loops 0 -selection clipboard > /dev/null 2>&", b);
     } else {
+      sprintf(a, "echo \"%s\" | wl-copy -t", argv[1]);
       sprintf(a, "echo \"%s\" | nohup xclip -t text/plain -loops 0 -selection clipboard > /dev/null 2>&1", argv[1]);
     }
     if (system(a)) {
