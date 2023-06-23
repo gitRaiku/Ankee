@@ -266,6 +266,16 @@ uint32_t mkwide(wchar_t *__restrict s, wchar_t c) {
   return 1;
 }
 
+wchar_t unwide(wchar_t c) {
+  if (c == 0x3000) {
+    return ' ';
+  }
+  if (c >= 0xFEE0 && (c - 0xFEE0 < 255)) {
+    return c - 0xFEE0;
+  }
+  return c;
+}
+
 void utf2wwch(char *__restrict s, wchar_t *__restrict t, uint32_t *__restrict tl) {
   *tl = 0;
   uint32_t cl;
@@ -930,8 +940,34 @@ int main(int argc, char **argv) {
   }
   endwin();
   if (COPY) {
-    char a[1024] = "";
-    sprintf(a, "echo \"%s\" | wl-copy", argv[1]);
+    char a[2048] = "";
+    if (sel) {
+      wchar_t b[256];
+      int32_t i;
+      uint32_t st = 0;
+      uint32_t dr = 0;
+      for(i = 0; i <= cpp + st; ++i) {
+        if (cstr[i] == ' ') {
+          ++st;
+        }
+      }
+      wcsncpy(b, cstr + cpp + st, sell + dr);
+      for(i = 0; i < sell + dr; ++i) {
+        if (cstr[cpp + st + i] == ' ') {
+          wcsncpy(b + i - dr, cstr + cpp + st + i + 1, sell + dr - i);
+          ++dr;
+        }
+      }
+      for (i = 0; i < sell; ++i) {
+        b[i] = unwide(b[i]);
+      }
+      b[sell] = L'\0';
+      sprintf(a, "echo \"%ls\" | wl-copy -t", b);
+      sprintf(a, "echo \"%ls\" | xclip -loops 0 -selection clipboard", b);
+    } else {
+      sprintf(a, "echo \"%s\" | wl-copy -t", argv[1]);
+      sprintf(a, "echo \"%s\" | xclip -loops 0 -selection clipboard", argv[1]);
+    }
     if (system(a)) {
       fprintf(stderr, "Could not copy the text to the clipboard!\n");
     }
