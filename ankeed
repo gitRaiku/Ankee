@@ -533,7 +533,8 @@ def main():
 
                     es = []
                     try:
-                        pool = Pool(len(cp))
+                        # pool = Pool(len(cp))
+                        pool = Pool(min(len(cp), 3))
                         r = pool.map(fnd, cp)
                         pool.close()
                         pool.join()
@@ -602,7 +603,8 @@ def main():
 
                     ot = ot.replace('\n', '<br>')
 
-                    s = f'{{\
+                    if at != '':
+                        s = f'{{\
 "action": "{tp}",\
 "version": 6,\
 "params": {{\
@@ -636,16 +638,43 @@ def main():
 }}\
 }}\
 }}'.encode('utf-8')
+                    else:
+                        s = f'{{\
+"action": "{tp}",\
+"version": 6,\
+"params": {{\
+    "note": {{\
+        "deckName": "Sentence Mining",\
+        "modelName": "SentenceMining",\
+        "fields": {{\
+            "Sentence": "{text}",\
+            "Words": "{ot}",\
+            "Audio": ""\
+        }},\
+        "options": {{\
+            "allowDuplicate": false,\
+            "duplicateScope": "deck",\
+            "duplicateScopeOptions": {{\
+                "deckName": "Sentence Mining",\
+                "checkChildren": false,\
+                "checkAllModels": false\
+            }}\
+        }}\
+    }}\
+}}\
+}}'.encode('utf-8')
+
                     print(s)
                     try:
                         requests.post('http://localhost:8765', s)
                     except:
                         os.system('herbe "Could not connect to the AnkiConnect server!" & disown')
 
-                    try:
-                        os.remove(at)
-                    except:
-                        print(f'Could not remove file {at}!', file=sys.stderr)
+                    if at != '':
+                        try:
+                            os.remove(at)
+                        except:
+                            print(f'Could not remove file {at}!', file=sys.stderr)
             cs.close()
     except Exception as e:
         print(e, file=sys.stderr)
