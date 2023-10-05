@@ -240,7 +240,24 @@ uint32_t utf8_to_unicode(char *__restrict str, uint32_t l) {
 }
 
 uint8_t iswide(wchar_t c) { // TODO: FIX
-  if (c == L'…' || c == L'”' || c == L'“' || c == L'･') {
+  if (c == L'…' ||
+      c == L'”' ||
+      c == L'“' ||
+      c == L'･' ||
+      c == L'Ⅰ' ||
+      c == L'Ⅱ' ||
+      c == L'Ⅲ' ||
+      c == L'Ⅳ' ||
+      c == L'Ⅴ' ||
+      c == L'Ⅵ' ||
+      c == L'Ⅶ' ||
+      c == L'Ⅷ' ||
+      c == L'Ⅸ' ||
+      c == L'Ⅹ' ||
+      c == L'Ⅺ' ||
+      c == L'Ⅻ' ||
+      c == L'｡'
+      ) {
     return 0;
   }
   if (c < 3000) {
@@ -940,6 +957,7 @@ int main(int argc, char **argv) {
     update();
     doupdate();
   }
+
   endwin();
   if (COPY) {
     char a[2048] = "";
