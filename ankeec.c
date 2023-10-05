@@ -825,7 +825,9 @@ void handle_input(char ch) {
         COPY = 1;
         break;
       case 'O':
-        send_sel(1);
+        if (selemsl) {
+          send_sel(1);
+        }
         break;
       case 'I':
         send_sel(2);
