@@ -479,6 +479,15 @@ void req(wchar_t *__restrict s) {
   cus[2] = calloc(sizeof(cus[2][0]), cum[2]);
 }
 
+void check(wchar_t *__restrict s) {
+  char ss[1024] = "";
+  uint32_t sl = wchutf8(ss + 3, s, wcslen(s));
+  ss[0] = (sl & 0xFF00) >> 8;
+  ss[1] = (sl & 0x00FF);
+  ss[2] = 4;
+  send(cs, ss, sl + 3, 0);
+}
+
 void create_new_panels() {
   int32_t i, j, k;
   werase(sw);
@@ -762,6 +771,24 @@ void handle_input(char ch) {
           --cu;
         }
         break;
+      case 'A':
+        if (cws == 0) {
+          if (sel) {
+            sell += 999999;
+          } else {
+            cpp += 999999;
+          }
+        }
+        break;
+      case '0':
+        if (cws == 0) {
+          if (sel) {
+            sell -= 999999;
+          } else {
+            cpp -= 999999;
+          }
+        }
+        break;
       case 27:
         sel = 0;
         break;
@@ -823,6 +850,40 @@ void handle_input(char ch) {
         } else {
           cus[cwss][cu] ^= 1;
         }
+        break;
+      case 'n':
+        if (cws == 0) {
+          if (sel) {
+            selems = realloc(selems, sizeof(selems[0]) * (selemsl + 1));
+            wchar_t a[512];
+            {
+              int32_t i;
+              uint32_t st = 0;
+              uint32_t dr = 0;
+              for(i = 0; i <= cpp + st; ++i) { if (cstr[i] == ' ') { ++st; } }
+              wcsncpy(a, cstr + cpp + st, sell + dr);
+              for(i = 0; i < sell + dr; ++i) { 
+                if (cstr[cpp + st + i] == ' ') {
+                  wcsncpy(a + i - dr, cstr + cpp + st + i + 1, sell + dr - i); ++dr;
+                }
+              }
+              a[sell] = L'\0';
+            }
+            check(a);   
+          }
+        } else {
+          if (cwss == 0){ 
+            check(resps[cws - 1].t[cu].s);
+          } else {
+            check(resps[cws - 1].r[cu].s);
+          }/* else {
+            check(resps[cws - 1].m[cu].s);
+          }*/
+        }
+          /// [cwss][cu]
+          /// [0][i]: resps[cws - 1].t[i].s
+          /// [1][i]: resps[cws - 1].r[i].s
+          /// [2][i]: resps[cws - 1].m[i].s
         break;
       case '\n':
         if (cws > 0) {

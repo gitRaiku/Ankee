@@ -4,7 +4,7 @@ all: build
 
 CC = gcc
 DATE := $(shell date "+%Y-%m-%d")
-COMPILE_FLAGS = -Og -g -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
+COMPILE_FLAGS = -Og -g -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched -Wno-format-overflow
 # COMPILE_FLAGS = -Ofast -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
 INCLUDE_FLAGS = 
 LIBRARY_FLAGS = -lncursesw -lpanelw
@@ -26,7 +26,8 @@ install: build
 	@echo '		end'
 	@echo '	to ~/.config/fish/config.fish'
 
-STRING = "ab cd()\ のこ“人間“泣けばゼミ…/き命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題"
+STRING = "ab cd()\ のこ“人間“泣けばゼミ…き命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題"
+# STRING = "のこ人間泣けばゼミき命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題命題"
 # STRING = "ab cd()\ のこ人間泣けばゼミ/き"
 run: build
 	./resources/ankeec $(STRING) "/tmp/mata"

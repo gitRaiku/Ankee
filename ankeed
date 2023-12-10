@@ -522,7 +522,14 @@ def main():
                         break
                 except:
                     break
-                if r[2] == 0:
+                if r[2] == 4:
+                    text = cs.recv(l).decode("utf-8").replace('\x00', '')
+                    print(f'Got {text}')
+                    ccom = f'{{"action": "guiBrowse","version": 6,"params": {{"query": "{text}"}}}}'.encode('utf-8')
+                    print(ccom)
+                    requests.post('http://localhost:8765', ccom)
+                    
+                elif r[2] == 0:
                     text = cs.recv(l).decode("utf-8").replace('\x00', '')
                     print(f'Got {text}')
 
