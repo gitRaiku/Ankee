@@ -23,7 +23,7 @@ int32_t __inline__ __attribute((pure)) max(int32_t o1, int32_t o2) {
 }
 
 void help() {
-  fprintf(stderr, "./kms <display text> <path/to/audio/file>\n");
+  fprintf(stderr, "ankeec <display text> <path/to/audio/file>\n");
   exit(1);
 }
 
@@ -937,8 +937,10 @@ void setup_server_connection() {
   rc = bind(cs, (struct sockaddr *) &csockaddr, len);
   if (rc == -1) {
     if (system("herbe \"Ankeec: Could not bind the socket!\" & disown")) {
-      fprintf(stderr, "Could run herbe! [%m]\n");
-      exit(1);
+      if (system("notify-send \"Ankeec: Could not bind the socket!\" & disown")) {
+        fprintf(stderr, "Could send the error notification! [%m]\n");
+        exit(1);
+      }
     }
     fprintf(stderr, "Could not bind the socket! [%m]\n");
     exit(1);
@@ -949,8 +951,10 @@ void setup_server_connection() {
   rc = connect(cs, (struct sockaddr *) &ssockaddr, len);
   if (rc == -1) {
     if (system("herbe \"Ankeec: Could not connect the server!\" & disown")) {
-      fprintf(stderr, "Could run herbe! [%m]\n");
-      exit(1);
+      if (system("notify-send \"Ankeec: Could not connect the server!\" & disown")) {
+        fprintf(stderr, "Could send the error notification! [%m]\n");
+        exit(1);
+      }
     }
     fprintf(stderr, "Could not connect to the server [%m]\n");
     exit(1);
@@ -973,8 +977,12 @@ void rscr() {
 }
 
 int main(int argc, char **argv) {
-  if (argc < 3) {
+  if (argc < 2) {
     help();
+  } else if (argc == 2) {
+    apath = strdup("");
+  } else {
+    apath = strdup(argv[2]);
   }
   
   setup_server_connection();
@@ -987,8 +995,6 @@ int main(int argc, char **argv) {
 
   cstr = malloc(sizeof(cstr[0]) * strlen(argv[1]));
   utf2wwch(argv[1], cstr, &cstrl);
-
-  apath = strdup(argv[2]);
 
   setlocale(LC_ALL, "");
 
