@@ -10,6 +10,7 @@ INCLUDE_FLAGS =
 LIBRARY_FLAGS = -lncursesw -lpanelw
  DEFINE_FLAGS = -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=600
 PWD := $(shell pwd)
+MANPREFIX = /usr/share/man
 
 build:
 	$(CC) $(COMPILE_FLAGS) $(DEFINE_FLAGS) $(LIBRARY_FLAGS) -o resources/ankeec ankeec.c
@@ -20,6 +21,8 @@ install: build
 	mkdir -p /usr/share/ankee/
 	ln -fs $(PWD)/resources/JMdict_e.xml /usr/share/ankee/JMdict_e.xml
 	ln -fs $(PWD)/ankeed /usr/local/bin/ankeed
+	cp ankee.1 $(MANPREFIX)/man1/ankee.1
+	chmod 644 $(MANPREFIX)/man1/ankee.1
 	@echo '	Add'
 	@echo '		if [ "$$ANKEEC" = "1" ]'
 	@echo '				exec ankeec "$$(cat /tmp/ankeect)" "$$(cat /tmp/ankeecp)"'
