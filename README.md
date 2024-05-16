@@ -1,7 +1,7 @@
 # Ankee
 A tool to turn japanese subtitles into anki flashcards easily using the JMDict dictionary which uses ncurses for the tui.
 
-![Ankee](https://user-images.githubusercontent.com/59704655/233614419-b593fb0f-7727-4281-8cf9-a21a5efbfcb8.png)
+![Ankee](https://github.com/gitRaiku/ankee/blob/master/resources/Ankee.png?raw=true)
 
 # Installation
 Running 
