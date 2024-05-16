@@ -29,4 +29,4 @@ Or by using the ``resources/new_sub_to_anki.lua`` mpv script which takes the cur
 ``ankeed`` may take up a quite a bit of memory while idling and especially searching specific words since it written in python and i haven't gotten to optimise it that much...
 
 # Armee
-[Armee](github.com/gitRaiku/Armee) is a tool that does the same thing but for german subtitles
+[Armee](https://github.com/gitRaiku/ankee) is a tool that does the same thing but for german subtitles
